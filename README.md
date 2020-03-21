@@ -10,4 +10,17 @@
 |test.py|无用的临时脚本|
 |...|其它一些图示|
 
+## 如何运行
+
+- 依赖python3.8
+- python3.7/python3.6也有可能运行，但没有测试过。
+- pip install pymysql
+- pip install tornado
+- $ python3.8 paymentServer.py
+
+## 如何接入
+
+- 商户端使用PaySimTool.py提供的函数接入
+- 散客端使用PaySimTool.js提供的函数接入
+
 
