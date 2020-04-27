@@ -32,6 +32,7 @@ class PaySim(tornado.web.RequestHandler):
             res = PayLib.QueryTrade(argDict['tradeID'])
         else:
             res = {"result": "执行失败，请检查参数是否符合接口文档"}
+        print("执行结果：", res)
         self.write(json.dumps(res))
 
 app = tornado.web.Application(

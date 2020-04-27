@@ -3,7 +3,8 @@ import time
 import uuid
 import json
 
-DB = sqlite3.connect(r"C:\Users\admin\Desktop\jdf\PaySim\PaySim.db")
+# DB = sqlite3.connect(r"C:\Users\admin\Desktop\jdf\PaySim\PaySim.db")
+DB = sqlite3.connect(r"PaySim.db")
 Cursor = DB.cursor()
 
 # util
@@ -60,21 +61,35 @@ def AccountTransfer(source: str, target: str, sum: int) -> dict:
 def StartTrade(target: str, source: str, tradeID: str, sum: int, timeLimit: int) -> dict:
     # 发起交易（商家用户名，散客用户名，商家内部订单号，金额，支付时限）
     ID = makeUUID()
-    Cursor.execute(f'insert into transaction_table (transactionID, transactionType, transactionState, source, target, sum, createTimestamp) values ("{ID}", "交易", "待支付", "{source}", "{target}", "{sum}", "{makeTimeStamp()}")')
-    data = {"result": "交易创建失败", "transactionID": ID}
+    Cursor.execute(f'insert into transaction_table (transactionID, transactionType, tradeID, transactionState, source, target, sum, createTimestamp) values ("{ID}", "交易", "{tradeID}", "待支付", "{source}", "{target}", "{sum}", "{makeTimeStamp()}")')
+    data = {"result": "交易创建成功", "transactionID": ID}
     DB.commit()
     return data
 def PayoffTrade(tradeID: str, username: str, password: str) -> dict:
     # 支付交易（商家内部订单号，用户名，密码）
-    Cursor.execute(f'update transaction_table transactionState="已支付" where tradeID="{tradeID}"')
-    data = {"result": "支付成功"}
-    DB.commit()
+    sql = f"select * from transaction_table where tradeID='{tradeID}'"
+    Cursor.execute(sql)
+    transaction = Cursor.fetchone()
+    source = transaction[4]
+    target = transaction[5]
+    sum = transaction[6]
+    Cursor.execute(f"select accountBalance from account_table where accountID='{username}'")
+    balance = Cursor.fetchone()
+    if sum > balance:
+        data = {"result": "支付失败"}
+    else:
+        sql = f"update transaction_table set source='{username}', transactionState='{已支付}', finishTimestamp='{makeTimeStamp()}' where tradeID='{tradeID}'"
+        # Cursor.execute(f'update transaction_table set transactionState="已支付" where tradeID="{tradeID}"')
+        Cursor.execute(sql)
+        DB.commit()
+        data = {"result": "支付成功"}
     return data
 def QueryTrade(tradeID: str) -> dict:
     # 查询交易（商家内部订单号）
-    Cursor.execute(f'select transactionID, tradeID, tradeState, source, target from transaction_table where tradeID={tradeID}')
+    Cursor.execute(f'select transactionID, tradeID, transactionState, source, target from transaction_table where tradeID="{tradeID}"')
     result = Cursor.fetchone()
-    data = {"transactionID": result[0], "tradeID": result[1], "tradeState": result[2], "source": result[3], "target": result[4]}
+    print(result)
+    data = {"transactionID": result[0], "tradeID": result[1], "transactionState": result[2], "source": result[3], "target": result[4]}
     return data
 
 
